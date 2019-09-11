@@ -10,6 +10,8 @@ github.com/0chain/gosdk v1.0.8 h1:jD/1mrLPfqu0RBY3tGMEiwy+dZzuhc2ER9OJRd0Najk=
 github.com/0chain/gosdk v1.0.8/go.mod h1:c7gSIDQgRBmf/lmj8Xy3hu+NA6IhDrm840F5SBm/9+M=
 github.com/0chain/gosdk v1.0.10 h1:HTKnB/a/eXnDiDzP6L2pYLxvYVz9syuEHn/ctqBUMTw=
 github.com/0chain/gosdk v1.0.10/go.mod h1:eunL1uXKF37UYUcPweagot9vICedhm7rgxjnvIUyrjU=
+github.com/0chain/gosdk v1.0.16 h1:px7G5s/m5KUD/HgHGmUDTwFLO12R/tYPcxsesnEibpc=
+github.com/0chain/gosdk v1.0.16/go.mod h1:O0WhqRJzhdcznrXEH1MEUY21X6YEptVl2koBTRtNbd0=
 github.com/0chain/gosdk v1.0.17 h1:7yK69CHb6HkFL47PZl3pucpkepObc+++WtFmZEFEfK0=
 github.com/0chain/gosdk v1.0.17/go.mod h1:eunL1uXKF37UYUcPweagot9vICedhm7rgxjnvIUyrjU=
 github.com/0chain/gosdk v1.0.18 h1:LInKL6O2Qg3yzNt8A7n/bRW/l7oEwSgvvduWcB/Ayls=
@@ -97,6 +99,8 @@ github.com/grpc-ecosystem/grpc-gateway v1.9.2/go.mod h1:vNeuVxBJEsws4ogUvrchl83t
 github.com/grpc-ecosystem/grpc-gateway v1.9.4/go.mod h1:vNeuVxBJEsws4ogUvrchl83t/GYV9WGTSLVdBhOQFDY=
 github.com/h2non/filetype v1.0.8 h1:le8gpf+FQA0/DlDABbtisA1KiTS0Xi+YSC/E8yY3Y14=
 github.com/h2non/filetype v1.0.8/go.mod h1:isekKqOuhMj+s/7r3rIeTErIRy4Rub5uBWHfvMusLMU=
+github.com/h2non/filetype v1.0.9 h1:Y9YFg/WJNd7XoC5h3WD+GZSxHmuRRDyJQ7fcIlIJplI=
+github.com/h2non/filetype v1.0.9/go.mod h1:isekKqOuhMj+s/7r3rIeTErIRy4Rub5uBWHfvMusLMU=
 github.com/hashicorp/golang-lru v0.5.0/go.mod h1:/m3WP610KZHVQ1SGc6re/UDhFvYD7pJ4Ao+sR/qLZy8=
 github.com/hashicorp/golang-lru v0.5.1/go.mod h1:/m3WP610KZHVQ1SGc6re/UDhFvYD7pJ4Ao+sR/qLZy8=
 github.com/hashicorp/hcl v1.0.0 h1:0Anlzjpi4vEasTeNFn2mLJgTSwt0+6sfsiTG8qcWGx4=
