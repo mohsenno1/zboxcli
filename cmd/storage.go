@@ -3,6 +3,7 @@ package cmd
 import (
 	"fmt"
 	"log"
+	"sync"
 	"time"
 
 	"github.com/0chain/gosdk/core/common"
@@ -61,6 +62,78 @@ var scConfig = &cobra.Command{
 			return
 		}
 		printStorageSCConfig(conf)
+	},
+}
+
+var updateSCConfig = &cobra.Command{
+	Use:   "update-sc-config",
+	Short: "Update torage SC configuration.",
+	Long:  `Update storage SC configuration.`,
+	Args:  cobra.MinimumNArgs(0),
+	Run: func(cmd *cobra.Command, args []string) {
+		var (
+			flags     = cmd.Flags()
+			err       error
+			conf      = new(sdk.StorageSCConfig)
+			wg        sync.WaitGroup
+			statusBar = &ZCNStatus{wg: &wg}
+		)
+
+		if flags.Changed("min_lock") {
+			var minLock float64
+			if minLock, err = flags.GetFloat64("min_lock"); err != nil {
+				log.Fatal(err)
+			}
+			conf.MinLock = common.Balance(zcncore.ConvertToValue(minLock))
+		}
+		if flags.Changed("max_destinations") {
+			if conf.MaxDestinations, err = flags.GetInt("max_destinations"); err != nil {
+				log.Fatal(err)
+			}
+		}
+		if flags.Changed("max_description_length") {
+			if conf.MaxDescriptionLength, err = flags.GetInt("max_description_length"); err != nil {
+				log.Fatal(err)
+			}
+		}
+
+		if flags.Changed("min_duration") {
+			if conf.MinDuration, err = flags.GetDuration("min_duration"); err != nil {
+				log.Fatal(err)
+			}
+		}
+		if flags.Changed("max_duration") {
+			if conf.MaxDuration, err = flags.GetDuration("max_duration"); err != nil {
+				log.Fatal(err)
+			}
+		}
+
+		txn, err := zcncore.NewTransaction(statusBar, 0)
+		if err != nil {
+			log.Fatal(err)
+		}
+		wg.Add(1)
+		if err = txn.VestingUpdateConfig(conf); err != nil {
+			log.Fatal(err)
+		}
+		wg.Wait()
+
+		if !statusBar.success {
+			log.Fatal("fatal:", statusBar.errMsg)
+		}
+
+		statusBar.success = false
+		wg.Add(1)
+		if err = txn.Verify(); err != nil {
+			log.Fatal(err)
+		}
+		wg.Wait()
+
+		if !statusBar.success {
+			log.Fatal("fatal:", statusBar.errMsg)
+		}
+
+		fmt.Println("storage smart contract settings updated")
 	},
 }
 
