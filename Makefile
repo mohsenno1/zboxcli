@@ -57,7 +57,7 @@ help:
 	@echo "\tmake gomod-clean       - clean the go modules"
 
 migrate-s3:
-	go run main.go migrate-s3 --config="./.env" --bucket="iamrz1-migration" --allocation $(ALLOC)
+	go run main.go migrate-s3 --config="./.env" --bucket="iamrz1-migration" --region="us-east-2" --allocation $(ALLOC)
 
 s3-all:
 	go run main.go migrate-s3 --config="./.env" --allocation $(ALLOC)

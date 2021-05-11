@@ -11,10 +11,10 @@ import (
 )
 
 type UploadService struct {
-	UploadConfig *model.UploadConfig
+	UploadConfig *model.MigrationConfig
 }
 
-func NewUploadService(UpConfig *model.UploadConfig) *UploadService {
+func NewUploadService(UpConfig *model.MigrationConfig) *UploadService {
 	return &UploadService{UploadConfig: UpConfig}
 }
 

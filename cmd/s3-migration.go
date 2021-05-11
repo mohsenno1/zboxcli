@@ -54,27 +54,29 @@ func migrateFromS3(cmd *cobra.Command, args []string) error {
 		log.Println("assuming the necessary env variables are defined")
 	}
 
-	uploadConfig, err := config.GetUploadConfig(cmd)
+	// get migration configurations
+	migrationConfig, err := config.GetMigrationConfig(cmd)
 	if err != nil {
 		log.Fatalln(err)
 	}
 
-	log.Println("getting s3 session")
-	sess := config.GetS3Session(uploadConfig.Region)
+	// use a region specific s3 session to fetch files from s3
+	sess := config.GetS3Session(migrationConfig.Region)
 
-	if len(uploadConfig.Buckets) == 0 {
+	// list all the buckets
+	if len(migrationConfig.Buckets) == 0 {
 		buckets, err := ListS3Buckets(sess)
 		if err != nil {
 			log.Println(err)
 			return err
 		}
 
-		log.Println("buckets ,", buckets)
-		uploadConfig.Buckets = buckets
+		//log.Println("buckets ,", buckets)
+		migrationConfig.Buckets = buckets
 	}
 
-	log.Println("list and download files")
-	err = MigrateFromS3BucketUsingLocalStorage(sess, uploadConfig)
+	log.Println("MigrateFromS3BucketsUsingLocalStorage")
+	err = MigrateFromS3BucketsUsingLocalStorage(sess, migrationConfig)
 	if err != nil {
 		log.Println(err)
 	}
@@ -106,32 +108,38 @@ func ListS3Buckets(sess *session.Session) ([]string, error) {
 
 // new functions
 
-//MigrateFromS3BucketUsingLocalStorage takes all the data from specified buckets,
+//MigrateFromS3BucketsUsingLocalStorage takes all the data from specified buckets,
 // downloads them to local storage and then uploads them to dStorage
-func MigrateFromS3BucketUsingLocalStorage(sess *session.Session, upConf *model.UploadConfig) error {
+func MigrateFromS3BucketsUsingLocalStorage(sess *session.Session, upConf *model.MigrationConfig) error {
+	// declare a s3 download manager
 	downloadManager := s3manager.NewDownloader(sess)
 	// Create S3 service client
 	svc := s3.New(sess)
 	//pageCount := 1
 
+	// use existing file list to exclude files that already exists in remote directory from being processed
 	existingFIleList, err := getExistingFileList(upConf)
 	if err != nil {
 		log.Println(err)
 		return err
 	}
 
-	for _, singleBucket := range upConf.Buckets {
-		err := svc.ListObjectsV2Pages(&s3.ListObjectsV2Input{Bucket: aws.String(singleBucket)}, func(page *s3.ListObjectsV2Output, lastPage bool) bool {
+	// process files from each individual bucket
+	for _, thisBucket := range upConf.Buckets {
+		// paginate contents of a bucket
+		err = svc.ListObjectsV2Pages(&s3.ListObjectsV2Input{Bucket: aws.String(thisBucket)}, func(page *s3.ListObjectsV2Output, lastPage bool) bool {
 			//fmt.Println("pageCount:", pageCount)
 			//pageCount++
+
+			//process all files in a page
 			for _, item := range page.Contents {
+				fmt.Println("")
 				fmt.Println("Processing Bucket:")
 				fmt.Println("Name:         ", *item.Key)
 				fmt.Println("Size:         ", *item.Size)
 
-				fmt.Println("")
-				remoteFilePath := fmt.Sprintf("/%s/%s", singleBucket, *item.Key)
-
+				// check if this specific file exists in existing file list, skip processing if it does
+				remoteFilePath := fmt.Sprintf("/%s/%s", thisBucket, *item.Key)
 				if val, ok := existingFIleList[remoteFilePath]; ok {
 					log.Println("file already exits in remote")
 					log.Println("dStorage size:", val)
@@ -140,7 +148,8 @@ func MigrateFromS3BucketUsingLocalStorage(sess *session.Session, upConf *model.U
 					continue
 				}
 
-				localTempFilePath, err := saveToLocal(downloadManager, fmt.Sprintf("%s/tmp", LocalDirectory), singleBucket, *item.Key)
+				// for new files, download to local and then upload to remote storage
+				localTempFilePath, err := saveToLocal(downloadManager, fmt.Sprintf("%s/tmp", LocalDirectory), thisBucket, *item.Key)
 				if err != nil {
 					log.Println("error:", err)
 					continue
@@ -154,7 +163,7 @@ func MigrateFromS3BucketUsingLocalStorage(sess *session.Session, upConf *model.U
 					log.Println("upload error:", err)
 				}
 
-				err = cleanupLocal(localTempFilePath)
+				err = cleanupLocalFile(localTempFilePath)
 				if err != nil {
 					log.Println("file delete error:", err)
 					continue
@@ -163,17 +172,17 @@ func MigrateFromS3BucketUsingLocalStorage(sess *session.Session, upConf *model.U
 			return true
 		})
 		if err != nil {
-			log.Printf("Unable to list items in bucket %q, %v", singleBucket, err)
+			log.Printf("Unable to list items in bucket %q, %v", thisBucket, err)
 			return err
 		}
 	}
-	cleanupLocal(fmt.Sprintf(LocalDirectory))
+
+	cleanupLocalAll(LocalDirectory)
 
 	return nil
 }
 
-func getExistingFileList(uploadConfig *model.UploadConfig) (map[string]int64, error) {
-
+func getExistingFileList(uploadConfig *model.MigrationConfig) (map[string]int64, error) {
 	allocationObj, err := sdk.GetAllocation(uploadConfig.AllocationID)
 	if err != nil {
 		PrintError("Error fetching the allocation", err)
@@ -229,7 +238,7 @@ func saveToLocal(downloader *s3manager.Downloader, localDirectory, bucket, key s
 	return filePath, nil
 }
 
-func cleanupLocal(filePath string) error {
+func cleanupLocalFile(filePath string) error {
 	log.Println("delete local file")
 	// delete local file
 	err := os.Remove(filePath)
@@ -240,10 +249,21 @@ func cleanupLocal(filePath string) error {
 	return nil
 }
 
+func cleanupLocalAll(path string) error {
+	log.Println("delete local path")
+	// delete local file
+	err := os.RemoveAll(path)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 // todo: use data stream to upload
 
 // MigrateFromS3UsingStream steams all the data in the specified buckets to dStorage
-func MigrateFromS3UsingStream(sess *session.Session, upConf *model.UploadConfig) error {
+func MigrateFromS3UsingStream(sess *session.Session, upConf *model.MigrationConfig) error {
 	// Create S3 service client
 	svc := s3.New(sess)
 	pageCount := 1
@@ -269,13 +289,13 @@ func MigrateFromS3UsingStream(sess *session.Session, upConf *model.UploadConfig)
 			return err
 		}
 	}
-	cleanupLocal(LocalDirectory)
+	cleanupLocalFile(LocalDirectory)
 
 	return nil
 }
 
 //SendToStorageDirectlyFromS3Bucket takes a single file from the bucket and upload it as a stream to dStorage
-func SendToStorageDirectlyFromS3Bucket(svc *s3.S3, upConf *model.UploadConfig, bucket, key string) error {
+func SendToStorageDirectlyFromS3Bucket(svc *s3.S3, upConf *model.MigrationConfig, bucket, key string) error {
 	log.Println("SendToStorageDirectlyFromS3Bucket : start to save file in writer")
 	t := time.Now()
 	// Download the filePath using the AWS SDK for Go

@@ -2,7 +2,8 @@ package model
 
 import "io"
 
-type UploadConfig struct {
+// MigrationConfig contains configurations to upload files from S3
+type MigrationConfig struct {
 	Region            string
 	Buckets           []string
 	AllocationID      string

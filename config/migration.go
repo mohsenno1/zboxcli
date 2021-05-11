@@ -7,8 +7,9 @@ import (
 	"log"
 )
 
-func GetUploadConfig(cmd *cobra.Command) (*model.UploadConfig, error) {
-	config := model.UploadConfig{}
+//GetMigrationConfig returns user defined configs to migrate data from s3
+func GetMigrationConfig(cmd *cobra.Command) (*model.MigrationConfig, error) {
+	config := model.MigrationConfig{}
 	fflags := cmd.Flags()                 // fflags is a *flag.FlagSet
 	if fflags.Changed("bucket") == true { // set bucket
 		buckets, err := fflags.GetStringSlice("bucket")
