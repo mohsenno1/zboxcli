@@ -55,3 +55,9 @@ help:
 	@echo "\tmake clean             - deletes all build output files"
 	@echo "\tmake gomod-download    - download the go modules"
 	@echo "\tmake gomod-clean       - clean the go modules"
+
+migrate-s3:
+	go run main.go migrate-s3 --config="./.env" --bucket="iamrz1-migration" --allocation $(ALLOC)
+
+s3-all:
+	go run main.go migrate-s3 --config="./.env" --allocation $(ALLOC)
