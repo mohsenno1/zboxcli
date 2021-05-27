@@ -61,3 +61,6 @@ migrate-s3:
 
 s3-all:
 	go run main.go migrate-s3 --config="./.env" --allocation $(ALLOC)
+
+ls:
+	go run main.go ls
