@@ -17,10 +17,15 @@ var lsCmd = &cobra.Command{
 	Long:  `AWS s3 compatible version of the listallocations command. It lists out all the buckets (or allocations.)`,
 	Run: func(cmd *cobra.Command, args []string) {
 
-		os.Setenv("remotepath", "/")
+		if len(args) == 0 {
+			cmd.Flag("remotepath").Value.Set("/")
+		} else if len(args) == 1 {
+			var path = "/"
+			path += args[0]
+			cmd.Flag("remotepath").Value.Set(path)
+		}
 
 		cmd.Flag("allocation").Value.Set(os.Getenv("ALLOC"))
-		cmd.Flag("remotepath").Value.Set(os.Getenv("remotepath"))
 
 		allocationID := cmd.Flag("allocation").Value.String()
 		allocationObj, err := sdk.GetAllocation(allocationID)
