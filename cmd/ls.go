@@ -12,9 +12,9 @@ import (
 
 var lsCmd = &cobra.Command{
 	Use:   "ls",
-	Short: "List all buckets (or allocations)",
+	Short: "List all buckets (first layer folders in an allocation)",
 	Args:  cobra.MaximumNArgs(1),
-	Long:  `AWS s3 compatible version of the listallocations command. It lists out all the buckets (or allocations.)`,
+	Long:  `AWS s3 compatible version of the listallocations command. It lists out all the buckets (or first layer folders in an allocations.)`,
 	Run: func(cmd *cobra.Command, args []string) {
 
 		if len(args) == 0 {
