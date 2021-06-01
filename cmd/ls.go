@@ -10,6 +10,41 @@ import (
 	"github.com/spf13/cobra"
 )
 
+func listRecursive(allocationObj *sdk.Allocation, remotepath string, data [][]string) [][]string {
+	currRef, _ := allocationObj.ListDir(remotepath)
+	for _, child := range currRef.Children {
+		if child.Type == fileref.DIRECTORY {
+			data = listRecursive(allocationObj, child.Path, data)
+		}
+	}
+
+	for _, child := range currRef.Children {
+		size := strconv.FormatInt(child.Size, 10)
+		if child.Type == fileref.DIRECTORY {
+			size = ""
+		}
+		isEncrypted := ""
+		if child.Type == fileref.FILE {
+			if len(child.EncryptionKey) > 0 {
+				isEncrypted = "YES"
+			} else {
+				isEncrypted = "NO"
+			}
+		}
+		data = append(data, []string{
+			child.Type,
+			child.Name,
+			child.Path,
+			size,
+			strconv.FormatInt(child.NumBlocks, 10),
+			child.LookupHash,
+			isEncrypted,
+			child.Attributes.WhoPaysForReads.String(),
+		})
+	}
+	return data
+}
+
 var lsCmd = &cobra.Command{
 	Use:   "ls",
 	Short: "List all buckets (first layer folders in an allocation)",
@@ -39,34 +74,44 @@ var lsCmd = &cobra.Command{
 			PrintError(err.Error())
 			os.Exit(1)
 		}
+
 		header := []string{"Type", "Name", "Path", "Size", "Num Blocks", "Lookup Hash", "Is Encrypted", "Downloads payer"}
-		data := make([][]string, len(ref.Children))
-		for idx, child := range ref.Children {
-			size := strconv.FormatInt(child.Size, 10)
-			if child.Type == fileref.DIRECTORY {
-				size = ""
-			}
-			isEncrypted := ""
-			if child.Type == fileref.FILE {
-				if len(child.EncryptionKey) > 0 {
-					isEncrypted = "YES"
-				} else {
-					isEncrypted = "NO"
+
+		isRecurive, _ := cmd.Flags().GetBool("recursive")
+		if !isRecurive {
+			data := make([][]string, len(ref.Children))
+			for idx, child := range ref.Children {
+				size := strconv.FormatInt(child.Size, 10)
+				if child.Type == fileref.DIRECTORY {
+					size = ""
+				}
+				isEncrypted := ""
+				if child.Type == fileref.FILE {
+					if len(child.EncryptionKey) > 0 {
+						isEncrypted = "YES"
+					} else {
+						isEncrypted = "NO"
+					}
+				}
+				data[idx] = []string{
+					child.Type,
+					child.Name,
+					child.Path,
+					size,
+					strconv.FormatInt(child.NumBlocks, 10),
+					child.LookupHash,
+					isEncrypted,
+					child.Attributes.WhoPaysForReads.String(),
 				}
 			}
-			data[idx] = []string{
-				child.Type,
-				child.Name,
-				child.Path,
-				size,
-				strconv.FormatInt(child.NumBlocks, 10),
-				child.LookupHash,
-				isEncrypted,
-				child.Attributes.WhoPaysForReads.String(),
-			}
+			util.WriteTable(os.Stdout, header, []string{}, data)
+			return
+		} else {
+			data := make([][]string, 10000) // Can list at most 10,000 entries
+			data = listRecursive(allocationObj, remotepath, data)
+			util.WriteTable(os.Stdout, header, []string{}, data)
+			return
 		}
-		util.WriteTable(os.Stdout, header, []string{}, data)
-		return
 	},
 }
 
@@ -74,5 +119,6 @@ func init() {
 	rootCmd.AddCommand(lsCmd)
 	lsCmd.PersistentFlags().String("allocation", "", "Allocation ID")
 	lsCmd.PersistentFlags().String("remotepath", "", "Remote path to list from")
-	listCmd.MarkFlagRequired("allocation")
+	lsCmd.MarkFlagRequired("allocation")
+	lsCmd.Flags().Bool("recursive", false, "List all items in remotepath recursively")
 }
