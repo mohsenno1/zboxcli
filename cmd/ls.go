@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"fmt"
 	"os"
 	"strconv"
 
@@ -10,11 +11,25 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func listRecursive(allocationObj *sdk.Allocation, remotepath string, data [][]string) [][]string {
+func ByteCountSI(b int64) string {
+	const unit = 1000
+	if b < unit {
+		return fmt.Sprintf("%d B", b)
+	}
+	div, exp := int64(unit), 0
+	for n := b / unit; n >= unit; n /= unit {
+		div *= unit
+		exp++
+	}
+	return fmt.Sprintf("%.1f %cB",
+		float64(b)/float64(div), "kMGTPE"[exp])
+} // Convert int size to Human readable size
+
+func listRecursive(allocationObj *sdk.Allocation, remotepath string, data [][]string, totalSize int, numObjects int) ([][]string, int, int) {
 	currRef, _ := allocationObj.ListDir(remotepath)
 	for _, child := range currRef.Children {
 		if child.Type == fileref.DIRECTORY {
-			data = listRecursive(allocationObj, child.Path, data)
+			data, totalSize, numObjects = listRecursive(allocationObj, child.Path, data, totalSize, numObjects)
 		}
 	}
 
@@ -22,6 +37,10 @@ func listRecursive(allocationObj *sdk.Allocation, remotepath string, data [][]st
 		size := strconv.FormatInt(child.Size, 10)
 		if child.Type == fileref.DIRECTORY {
 			size = ""
+		}
+		if size != "" {
+			fileSize, _ := strconv.Atoi(size)
+			totalSize += fileSize
 		}
 		isEncrypted := ""
 		if child.Type == fileref.FILE {
@@ -41,8 +60,9 @@ func listRecursive(allocationObj *sdk.Allocation, remotepath string, data [][]st
 			isEncrypted,
 			child.Attributes.WhoPaysForReads.String(),
 		})
+		numObjects += 1
 	}
-	return data
+	return data, totalSize, numObjects
 }
 
 var lsCmd = &cobra.Command{
@@ -78,12 +98,19 @@ var lsCmd = &cobra.Command{
 		header := []string{"Type", "Name", "Path", "Size", "Num Blocks", "Lookup Hash", "Is Encrypted", "Downloads payer"}
 
 		isRecurive, _ := cmd.Flags().GetBool("recursive")
+		totalSize := 0  // For --summarize
+		numObjects := 0 // For --summarize
+
 		if !isRecurive {
 			data := make([][]string, len(ref.Children))
 			for idx, child := range ref.Children {
 				size := strconv.FormatInt(child.Size, 10)
 				if child.Type == fileref.DIRECTORY {
 					size = ""
+				}
+				if size != "" {
+					fileSize, _ := strconv.Atoi(size)
+					totalSize += fileSize
 				}
 				isEncrypted := ""
 				if child.Type == fileref.FILE {
@@ -103,14 +130,18 @@ var lsCmd = &cobra.Command{
 					isEncrypted,
 					child.Attributes.WhoPaysForReads.String(),
 				}
+				numObjects += 1
 			}
 			util.WriteTable(os.Stdout, header, []string{}, data)
-			return
 		} else {
 			data := make([][]string, 10000) // Can list at most 10,000 entries
-			data = listRecursive(allocationObj, remotepath, data)
+			data, totalSize, numObjects = listRecursive(allocationObj, remotepath, data, totalSize, numObjects)
 			util.WriteTable(os.Stdout, header, []string{}, data)
-			return
+		}
+		isSummarized, _ := cmd.Flags().GetBool("summarize")
+		if isSummarized {
+			fmt.Println("Total Objects: ", numObjects)
+			fmt.Println("Total Size: ", ByteCountSI(int64(totalSize)))
 		}
 	},
 }
@@ -121,4 +152,5 @@ func init() {
 	lsCmd.PersistentFlags().String("remotepath", "", "Remote path to list from")
 	lsCmd.MarkFlagRequired("allocation")
 	lsCmd.Flags().Bool("recursive", false, "List all items in remotepath recursively")
+	lsCmd.Flags().Bool("summarize", false, "Show summary (number of files, total size.)")
 }
