@@ -25,11 +25,11 @@ func ByteCountSI(b int64) string {
 		float64(b)/float64(div), "kMGTPE"[exp])
 } // Convert int size to Human readable size
 
-func listRecursive(allocationObj *sdk.Allocation, remotepath string, data [][]string, totalSize int, numObjects int) ([][]string, int, int) {
+func listRecursive(allocationObj *sdk.Allocation, remotepath string, data [][]string, totalSize int, numObjects int, isHumanReadable bool) ([][]string, int, int) {
 	currRef, _ := allocationObj.ListDir(remotepath)
 	for _, child := range currRef.Children {
 		if child.Type == fileref.DIRECTORY {
-			data, totalSize, numObjects = listRecursive(allocationObj, child.Path, data, totalSize, numObjects)
+			data, totalSize, numObjects = listRecursive(allocationObj, child.Path, data, totalSize, numObjects, isHumanReadable)
 		}
 	}
 
@@ -41,6 +41,9 @@ func listRecursive(allocationObj *sdk.Allocation, remotepath string, data [][]st
 		if size != "" {
 			fileSize, _ := strconv.Atoi(size)
 			totalSize += fileSize
+			if isHumanReadable {
+				size = ByteCountSI(int64(fileSize))
+			}
 		}
 		isEncrypted := ""
 		if child.Type == fileref.FILE {
@@ -98,6 +101,7 @@ var lsCmd = &cobra.Command{
 		header := []string{"Type", "Name", "Path", "Size", "Num Blocks", "Lookup Hash", "Is Encrypted", "Downloads payer"}
 
 		isRecurive, _ := cmd.Flags().GetBool("recursive")
+		isHumanReadable, _ := cmd.Flags().GetBool("human-readable")
 		totalSize := 0  // For --summarize
 		numObjects := 0 // For --summarize
 
@@ -111,6 +115,9 @@ var lsCmd = &cobra.Command{
 				if size != "" {
 					fileSize, _ := strconv.Atoi(size)
 					totalSize += fileSize
+					if isHumanReadable {
+						size = ByteCountSI(int64(fileSize))
+					}
 				}
 				isEncrypted := ""
 				if child.Type == fileref.FILE {
@@ -135,7 +142,7 @@ var lsCmd = &cobra.Command{
 			util.WriteTable(os.Stdout, header, []string{}, data)
 		} else {
 			data := make([][]string, 10000) // Can list at most 10,000 entries
-			data, totalSize, numObjects = listRecursive(allocationObj, remotepath, data, totalSize, numObjects)
+			data, totalSize, numObjects = listRecursive(allocationObj, remotepath, data, totalSize, numObjects, isHumanReadable)
 			util.WriteTable(os.Stdout, header, []string{}, data)
 		}
 		isSummarized, _ := cmd.Flags().GetBool("summarize")
@@ -153,4 +160,5 @@ func init() {
 	lsCmd.MarkFlagRequired("allocation")
 	lsCmd.Flags().Bool("recursive", false, "List all items in remotepath recursively")
 	lsCmd.Flags().Bool("summarize", false, "Show summary (number of files, total size.)")
+	lsCmd.Flags().Bool("human-readable", false, "Show file sizes in human readbale format.")
 }
