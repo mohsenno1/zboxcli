@@ -39,6 +39,7 @@ zbox is a command line interface (CLI) tool to understand the capabilities of 0C
 31. [Move uploaded files to another folder path on dStorage](#Move)
 32. [Add Collaborator for a file](#Add-collaborator)
 33. [Remove Collaborator for a file](#Delete-collaborator)
+34. [Use s3-CLI commands in 0Box](#s3-CLI)
 
 zbox CLI provides a self-explaining "help" option that lists commands and parameters they need to perform the intended action
 
@@ -129,6 +130,7 @@ Response
         help              Help about any command
         list              list files from blobbers
         listallocations   List allocations for the client
+        ls                Show the objects in the current directory
         ls-blobbers       Show active blobbers in storage SC.
         meta              get meta data of files from blobbers
         move              move an object(file/folder) to another folder on blobbers
@@ -821,6 +823,53 @@ getFileMetaByAuth - same updates as getFileMeta
 
 listAllocation - returns actuaBlockNumbers and actualFileSize (exclude thumbnail size)
 
+### s3 CLI
+
+You can use AWS s3 CLI inside ZBoxCLI out of the box. To give you a high-level mapping of 0Box to to s3, consider each allocation-ID in 0Chain dStorage to be a separate s3 instance. Then, all the first layer folders in an allocation can be
+considered as different buckets. To use s3 commands for a particular allocation, export that allocation-ID to an environment
+variable $ALLOC.
+
+Windows:
+```
+$Env:ALLOC="<alloc-ID>"
+```
+Ubuntu:
+```
+export ALLOC="<alloc-ID>"
+```
+
+That's it, you're set. Below are some examples of using aws s3 CLI commands in ZBoxCLI.
+
+## ls
+
+Use ls to list all folders in an allocation. You can also provide an argument as path.
+
+-     --human-readable      Show file sizes in human readbale format.
+-     --recursive           List all items in remotepath recursively
+-     --summarize           Show summary (number of files, total size.)
+
+Command:
+```
+./zbox ls
+```
+Response:
+```
+  TYPE |   NAME   |   PATH    | SIZE | NUM BLOCKS |                           LOOKUP HASH                            | IS ENCRYPTED | DOWNLOADS PAYER  
++------+----------+-----------+------+------------+------------------------------------------------------------------+--------------+-----------------+
+  d    | myfiles  | /myfiles  |      |          5 | 86059774be7b08c95df91429acf1c993b5af712b512415f90d5900abe488ff0e |              | owner
+  f    | sync.txt | /sync.txt |   21 |          3 | 060f2bb9b3c9ba5f85d4d63f9c2601bd1d6f34a6c21dc99f73951947b0ecb956 | NO           | owner
+
+```
+Command:
+```
+./zbox ls myfiles
+```
+Response:
+```
+  TYPE |   NAME   |       PATH        | SIZE | NUM BLOCKS |                           LOOKUP HASH                            | IS ENCRYPTED | DOWNLOADS PAYER  
++------+----------+-------------------+------+------------+------------------------------------------------------------------+--------------+-----------------+
+  f    | sync.txt | /myfiles/sync.txt |   21 |          3 | 6f8fbc4a5aba9a48bd97a29f3dbd8f77df94697f128d2f56fec0e107ea654ba2 | NO           | owner
+```
 # Troubleshooting
 
 1. Both `rp-info` and `rp-lock` are not working.
