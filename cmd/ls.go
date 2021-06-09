@@ -155,8 +155,8 @@ var lsCmd = &cobra.Command{
 
 func init() {
 	rootCmd.AddCommand(lsCmd)
-	lsCmd.PersistentFlags().String("allocation", "", "Allocation ID")
-	lsCmd.PersistentFlags().String("remotepath", "", "Remote path to list from")
+	lsCmd.PersistentFlags().String("allocation", "", "Allocation ID (will get automatically if it is stored as an env variable.)")
+	lsCmd.PersistentFlags().String("remotepath", "", "Remote path to list from.")
 	lsCmd.MarkFlagRequired("allocation")
 	lsCmd.Flags().Bool("recursive", false, "List all items in remotepath recursively")
 	lsCmd.Flags().Bool("summarize", false, "Show summary (number of files, total size.)")
