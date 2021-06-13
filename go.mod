@@ -8,7 +8,6 @@ require (
 	github.com/klauspost/cpuid v1.2.1 // indirect
 	github.com/magiconair/properties v1.8.1 // indirect
 	github.com/mattn/go-colorable v0.1.4 // indirect
-	github.com/mattn/go-runewidth v0.0.10 // indirect
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/olekukonko/tablewriter v0.0.1
 	github.com/pelletier/go-toml v1.4.0 // indirect
@@ -23,3 +22,4 @@ require (
 
 // temporary, for development
 // replace github.com/0chain/gosdk => ../gosdk
+replace github.com/0chain/gosdk => ../g3
