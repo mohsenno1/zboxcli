@@ -1,12 +1,10 @@
 package cmd
 
 import (
-	"log"
 	"os"
 	"strings"
 	"sync"
 
-	"github.com/0chain/gosdk/core/common"
 	"github.com/0chain/gosdk/zboxcore/fileref"
 	"github.com/0chain/gosdk/zboxcore/sdk"
 	"github.com/0chain/gosdk/zboxcore/zboxutil"
@@ -91,19 +89,6 @@ var uploadCmd = &cobra.Command{
 			encrypt = true
 		}
 		var attrs fileref.Attributes
-		if fflags.Changed("attr-who-pays-for-reads") {
-			var (
-				wp  common.WhoPays
-				wps string
-			)
-			if wps, err = fflags.GetString("attr-who-pays-for-reads"); err != nil {
-				log.Fatalf("getting 'attr-who-pays-for-reads' flag: %v", err)
-			}
-			if err = wp.Parse(wps); err != nil {
-				log.Fatal(err)
-			}
-			attrs.WhoPaysForReads = wp // set given value
-		}
 
 		if len(thumbnailpath) > 0 {
 			if encrypt {
@@ -145,7 +130,6 @@ func init() {
 	uploadCmd.PersistentFlags().String("remotepath", "", "Remote path to upload")
 	uploadCmd.PersistentFlags().String("localpath", "", "Local path of file to upload")
 	uploadCmd.PersistentFlags().String("thumbnailpath", "", "Local thumbnail path of file to upload")
-	uploadCmd.PersistentFlags().String("attr-who-pays-for-reads", "owner", "Who pays for reads: owner or 3rd_party")
 	uploadCmd.Flags().Bool("encrypt", false, "pass this option to encrypt and upload the file")
 	uploadCmd.Flags().Bool("commit", false, "pass this option to commit the metadata transaction")
 	uploadCmd.MarkFlagRequired("allocation")
