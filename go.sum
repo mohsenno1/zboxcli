@@ -52,6 +52,8 @@ github.com/0chain/errors v1.0.2/go.mod h1:5t76jLb56TKfg/K2VD+eUMmNZJ42QsIRI8KzWu
 github.com/0chain/gosdk v1.2.68-0.20210701180605-719eb403820c/go.mod h1:EntD+g2xA5SLUAm6JABMhkYAlTOmp0XhSnf/5xfwnV4=
 github.com/0chain/gosdk v1.2.82-0.20210830152420-b909cca1a30d h1:KMyI/euF2TD7hOsptn90NJnTYzcedxPW3z2nFdF+53s=
 github.com/0chain/gosdk v1.2.82-0.20210830152420-b909cca1a30d/go.mod h1:8uSallS+QhV6RCy1Zgtbu+WTOEkmnBpdnhFmJSlwcY0=
+github.com/0chain/gosdk v1.2.82-0.20210901150224-70bf3a862480 h1:J6dtkmrl7NGJ6GQ22aPE+/3x/XCginWuFlhidtdjrBE=
+github.com/0chain/gosdk v1.2.82-0.20210901150224-70bf3a862480/go.mod h1:8uSallS+QhV6RCy1Zgtbu+WTOEkmnBpdnhFmJSlwcY0=
 github.com/0chain/gosdk v1.2.83 h1:3sKzFlKsrr/0uS5skY5pwfETMbSuuAr7Pkrc1rrLxak=
 github.com/0chain/gosdk v1.2.83/go.mod h1:Bl/wsHdlktgXybdzkHPfaf6ATe7mPmew/xF3ki2gskQ=
 github.com/Azure/azure-pipeline-go v0.2.1/go.mod h1:UGSo8XybXnIGZ3epmeBw7Jdz+HiUVpqIlpz/HKHylF4=
