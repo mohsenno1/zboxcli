@@ -3,7 +3,8 @@ module github.com/0chain/zboxcli
 go 1.13
 
 require (
-	github.com/0chain/gosdk v1.2.82-0.20210901150224-70bf3a862480
+	github.com/0chain/blobber v0.3.3-0.20210906180942-a4d07506321c // indirect
+	github.com/0chain/gosdk v1.2.82-0.20210903204402-4a895c5ef312
 	github.com/mattn/go-runewidth v0.0.10 // indirect
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/olekukonko/tablewriter v0.0.5
