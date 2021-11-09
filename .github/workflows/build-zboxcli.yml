@@ -16,8 +16,8 @@ env:
   GITHUB_TOKEN: ${{ secrets.GOSDK }}
 
 jobs:
-  build:
-    name: Build
+  build-linux:
+    name: Build-linux
     runs-on: [self-hosted, build]
     
     steps:
